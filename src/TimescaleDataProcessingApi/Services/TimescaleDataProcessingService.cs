@@ -109,6 +109,33 @@ namespace TimescaleDataProcessingApi.Services
             });
         }
 
+        public async Task<IEnumerable<ValueResponseDto>> GetLastTenValuesAsync(string fileName)
+        {
+            if (string.IsNullOrEmpty(fileName))
+                throw new ArgumentException("File name cannot be empty");
+
+            var existFileName = await _context.Values.AnyAsync(v => v.FileName == fileName);
+
+            if (!existFileName)
+                throw new ArgumentException("File name not found");
+
+            var values = await _context.Values
+                .AsNoTracking()
+                .Where(v => v.FileName == fileName)
+                .OrderByDescending(v => v.Date)
+                .Take(10)
+                .ToListAsync();
+
+            return values.Select(v => new ValueResponseDto
+            {
+                Id = v.Id,
+                Date = v.Date,
+                ExecutionTime = v.ExecutionTime,
+                Value = v.Value,
+                FileName = v.FileName
+            });
+        }
+
         /// <summary>
         /// Расчитывает интегральные значения для данных.
         /// </summary>
@@ -151,7 +178,6 @@ namespace TimescaleDataProcessingApi.Services
         /// </summary>
         /// <param name="file">Файл.</param>
         /// <returns>Список объектов <see cref="ValueEntry"/> полученных из файла.</returns>
-        /// <exception cref="InvalidOperationException"></exception>
         /// <exception cref="FormatException"></exception>
         /// <exception cref="ArgumentOutOfRangeException"></exception>
         private async Task<List<ValueEntry>> TryParseCsvFileAsync(IFormFile file)
@@ -173,7 +199,7 @@ namespace TimescaleDataProcessingApi.Services
             }
 
             if (lines.Count < 1 || lines.Count > 10000)
-                throw new InvalidOperationException($"Invalid row count: {lines.Count}. Must be between 1 and 10,000");
+                throw new ArgumentOutOfRangeException($"Invalid row count: {lines.Count}. Must be between 1 and 10,000");
 
             foreach (var l in lines)
             {
