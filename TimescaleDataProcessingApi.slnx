@@ -1,4 +1,4 @@
 <Solution>
+  <Project Path="src/TimescaleDataProcessingApi.Tests/TimescaleDataProcessingApi.Tests.csproj" />
   <Project Path="src/TimescaleDataProcessingApi/TimescaleDataProcessingApi.csproj" />
-  <Project Path="TimescaleDataProcessingApi.Tests/TimescaleDataProcessingApi.Tests.csproj" Id="a73becfc-71c0-4431-aa1c-6a66fe97d3f1" />
 </Solution>
