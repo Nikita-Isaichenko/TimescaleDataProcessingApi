@@ -4,6 +4,8 @@ namespace TimescaleDataProcessingApi.DTOs.Response
 {
     public class ResultResponseDto
     {
+        public int Id { get; set; }
+
         public string FileName { get; set; } = string.Empty;
 
         public double DeltaTimeSeconds { get; set; }

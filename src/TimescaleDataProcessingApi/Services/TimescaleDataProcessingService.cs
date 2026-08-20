@@ -1,6 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using Microsoft.VisualBasic;
 using System.Globalization;
+using TimescaleDataProcessingApi.DTOs.Request;
+using TimescaleDataProcessingApi.DTOs.Response;
 using TimescaleDataProcessingApi.Models;
 
 namespace TimescaleDataProcessingApi.Services
@@ -51,6 +52,61 @@ namespace TimescaleDataProcessingApi.Services
                 throw new InvalidOperationException($"File validation error: {ex.Message}");
             }
 
+        }
+
+        public async Task<IEnumerable<ResultResponseDto>> GetFilteredResultsAsync(FilterDto filter)
+        {
+            IQueryable<Result> query = _context.Results.AsNoTracking();
+
+            if (!string.IsNullOrEmpty(filter.FileName))
+            {
+                query = query.Where(r => r.FileName == filter.FileName);
+            }
+
+            if (filter.StartDate.HasValue)
+            {
+                query = query.Where(r => r.FirstOperationStart >= filter.StartDate.Value);
+            }
+
+            if (filter.EndDate.HasValue)
+            {
+                query = query.Where(r => r.FirstOperationStart <= filter.EndDate.Value);
+            }
+
+            if (filter.MinAvgValue.HasValue)
+            {
+                query = query.Where(r => r.AvgValue >= filter.MinAvgValue.Value);
+            }
+
+            if (filter.MaxAvgValue.HasValue)
+            {
+                query = query.Where(r => r.AvgValue <= filter.MaxAvgValue.Value);
+            }
+
+            if (filter.MinAvgExecutionTime.HasValue)
+            {
+                query = query.Where(r => r.AvgExecutionTime >= filter.MinAvgExecutionTime.Value);
+            }
+
+            if (filter.MaxAvgExecutionTime.HasValue)
+            {
+                query = query.Where(r => r.AvgExecutionTime <= filter.MaxAvgExecutionTime.Value);
+            }
+
+            var results = await query.ToListAsync();
+
+            return results.Select(r => new ResultResponseDto
+            {
+                Id = r.Id,
+                FileName = r.FileName,
+                DeltaTimeSeconds = r.DeltaTimeSeconds,
+                FirstOperationStart = r.FirstOperationStart,
+                AvgExecutionTime = r.AvgExecutionTime,
+                AvgValue = r.AvgValue,
+                MedianValue = r.MedianValue,
+                MaxValue = r.MaxValue,
+                MinValue = r.MinValue
+            });
         }
 
         /// <summary>
