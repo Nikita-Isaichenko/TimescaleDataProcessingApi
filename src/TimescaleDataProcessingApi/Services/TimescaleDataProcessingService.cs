@@ -6,6 +6,9 @@ using TimescaleDataProcessingApi.Models;
 
 namespace TimescaleDataProcessingApi.Services
 {
+    /// <summary>
+    /// Используется для загрузки и обработки файла, а также получения обработанных данных.
+    /// </summary>
     public class TimescaleDataProcessingService
     {
         private const string DateFormat = "yyyy-MM-ddTHH-mm-ss.ffffZ";
@@ -17,6 +20,13 @@ namespace TimescaleDataProcessingApi.Services
             _context = context;
         }
 
+        /// <summary>
+        /// Обрабатывает Csv файл и загружает обработанные данные в базу данных.
+        /// </summary>
+        /// <param name="file">Файл.</param>
+        /// <returns></returns>
+        /// <exception cref="ArgumentException"></exception>
+        /// <exception cref="InvalidOperationException"></exception>
         public async Task ProcessCsvFile(IFormFile file)
         {
             if (file == null || file.Length == 0)
@@ -54,6 +64,11 @@ namespace TimescaleDataProcessingApi.Services
 
         }
 
+        /// <summary>
+        /// Возвращает подсчитанные интегральные данные из базы данных с использованием фильтров.
+        /// </summary>
+        /// <param name="filter">Объект, описывающий доступные фильтры.</param>
+        /// <returns>Список отфильтрованных данных.</returns>
         public async Task<IEnumerable<ResultResponseDto>> GetFilteredResultsAsync(FilterDto filter)
         {
             IQueryable<Result> query = _context.Results.AsNoTracking();
@@ -110,6 +125,39 @@ namespace TimescaleDataProcessingApi.Services
         }
 
         /// <summary>
+        /// Возвращает последние 10 значений по времени, которые сооответствуют названию файла.
+        /// </summary>
+        /// <param name="fileName">Название файла.</param>
+        /// <returns>Список значений.</returns>
+        /// <exception cref="ArgumentException"></exception>
+        public async Task<IEnumerable<ValueResponseDto>> GetLastTenValuesAsync(string fileName)
+        {
+            if (string.IsNullOrEmpty(fileName))
+                throw new ArgumentException("File name cannot be empty");
+
+            var existFileName = await _context.Values.AnyAsync(v => v.FileName == fileName);
+
+            if (!existFileName)
+                throw new ArgumentException("File name not found");
+
+            var values = await _context.Values
+                .AsNoTracking()
+                .Where(v => v.FileName == fileName)
+                .OrderByDescending(v => v.Date)
+                .Take(10)
+                .ToListAsync();
+
+            return values.Select(v => new ValueResponseDto
+            {
+                Id = v.Id,
+                Date = v.Date,
+                ExecutionTime = v.ExecutionTime,
+                Value = v.Value,
+                FileName = v.FileName
+            });
+        }
+
+        /// <summary>
         /// Расчитывает интегральные значения для данных.
         /// </summary>
         /// <param name="values">Данные.</param>
@@ -151,7 +199,6 @@ namespace TimescaleDataProcessingApi.Services
         /// </summary>
         /// <param name="file">Файл.</param>
         /// <returns>Список объектов <see cref="ValueEntry"/> полученных из файла.</returns>
-        /// <exception cref="InvalidOperationException"></exception>
         /// <exception cref="FormatException"></exception>
         /// <exception cref="ArgumentOutOfRangeException"></exception>
         private async Task<List<ValueEntry>> TryParseCsvFileAsync(IFormFile file)
@@ -173,7 +220,7 @@ namespace TimescaleDataProcessingApi.Services
             }
 
             if (lines.Count < 1 || lines.Count > 10000)
-                throw new InvalidOperationException($"Invalid row count: {lines.Count}. Must be between 1 and 10,000");
+                throw new ArgumentOutOfRangeException($"Invalid row count: {lines.Count}. Must be between 1 and 10,000");
 
             foreach (var l in lines)
             {
