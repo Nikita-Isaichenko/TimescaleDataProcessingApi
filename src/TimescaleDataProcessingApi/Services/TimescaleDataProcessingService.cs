@@ -6,6 +6,9 @@ using TimescaleDataProcessingApi.Models;
 
 namespace TimescaleDataProcessingApi.Services
 {
+    /// <summary>
+    /// Используется для загрузки и обработки файла, а также получения обработанных данных.
+    /// </summary>
     public class TimescaleDataProcessingService
     {
         private const string DateFormat = "yyyy-MM-ddTHH-mm-ss.ffffZ";
@@ -17,6 +20,13 @@ namespace TimescaleDataProcessingApi.Services
             _context = context;
         }
 
+        /// <summary>
+        /// Обрабатывает Csv файл и загружает обработанные данные в базу данных.
+        /// </summary>
+        /// <param name="file">Файл.</param>
+        /// <returns></returns>
+        /// <exception cref="ArgumentException"></exception>
+        /// <exception cref="InvalidOperationException"></exception>
         public async Task ProcessCsvFile(IFormFile file)
         {
             if (file == null || file.Length == 0)
@@ -54,6 +64,11 @@ namespace TimescaleDataProcessingApi.Services
 
         }
 
+        /// <summary>
+        /// Возвращает подсчитанные интегральные данные из базы данных с использованием фильтров.
+        /// </summary>
+        /// <param name="filter">Объект, описывающий доступные фильтры.</param>
+        /// <returns>Список отфильтрованных данных.</returns>
         public async Task<IEnumerable<ResultResponseDto>> GetFilteredResultsAsync(FilterDto filter)
         {
             IQueryable<Result> query = _context.Results.AsNoTracking();
@@ -109,6 +124,12 @@ namespace TimescaleDataProcessingApi.Services
             });
         }
 
+        /// <summary>
+        /// Возвращает последние 10 значений по времени, которые сооответствуют названию файла.
+        /// </summary>
+        /// <param name="fileName">Название файла.</param>
+        /// <returns>Список значений.</returns>
+        /// <exception cref="ArgumentException"></exception>
         public async Task<IEnumerable<ValueResponseDto>> GetLastTenValuesAsync(string fileName)
         {
             if (string.IsNullOrEmpty(fileName))

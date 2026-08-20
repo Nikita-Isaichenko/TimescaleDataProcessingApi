@@ -3,6 +3,9 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace TimescaleDataProcessingApi.Models
 {
+    /// <summary>
+    /// Хранит значения из Csv файла.
+    /// </summary>
     [Table("values")]
     public class ValueEntry
     {

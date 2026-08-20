@@ -3,6 +3,9 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace TimescaleDataProcessingApi.Models
 {
+    /// <summary>
+    /// Хранит интегральные вычисления для значений из файла.
+    /// </summary>
     [Table("results")]
     public class Result
     {
