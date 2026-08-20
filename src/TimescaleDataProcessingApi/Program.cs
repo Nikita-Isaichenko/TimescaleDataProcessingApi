@@ -1,5 +1,6 @@
 
 using Microsoft.EntityFrameworkCore;
+using TimescaleDataProcessingApi.Services;
 
 namespace TimescaleDataProcessingApi
 {
@@ -15,6 +16,7 @@ namespace TimescaleDataProcessingApi
             builder.Services.AddEndpointsApiExplorer();
             builder.Services.AddSwaggerGen();
             builder.Services.AddDbContext<TimescaleDataDbContext>(options => options.UseNpgsql(connectionString));
+            builder.Services.AddScoped<TimescaleDataProcessingService>();
 
             var app = builder.Build();
 
